@@ -1,0 +1,78 @@
+#! nightly
+#-------------------------------------------------------------------#
+# Dynamic Structural Equation Modeling in Blimp
+#
+# Supplemental Material
+#
+# Model 4 - Random-Slope Location-Scale VAR(1)
+#
+# Person-specific quantities:
+#   b_0j = typical sleep quality       g_0j = typical pain
+#   b_1j = sleep carry-over            g_1j = pain carry-over
+#   b_2j = pain-to-sleep spillover     g_2j = sleep-to-pain spillover
+#   l_j  = sleep log residual variance
+#   w_j  = pain log residual variance
+#
+# Copyright Brian T. Keller 2026 all rights reserved
+#-------------------------------------------------------------------#
+
+# Read in and set up data
+DATA: paindiary.csv;       # Read data in
+MISSING: NA;               # Missing data code
+CLUSTERID: person;         # Level-2 (person) identifier
+TIMEID: day;               # Consecutive time index
+
+LATENT:                    # Person-specific random effects
+    person = b_0j b_1j b_2j
+             g_0j g_1j g_2j
+             l_j w_j;
+
+# Specify Random-Slope Location-Scale VAR(1) Model
+MODEL:
+    # Latent-centered within-person lagged deviations
+    sleep_lag = sleep.lag - b_0j;
+    pain_lag  = pain.lag  - g_0j;
+
+    between:
+        b_0j b_1j b_2j g_0j g_1j g_2j l_j w_j ~~
+            b_0j b_1j b_2j g_0j g_1j g_2j l_j w_j;
+
+        b_0j ~ intercept@b_0;
+        b_1j ~ intercept@b_1;
+        b_2j ~ intercept@b_2;
+        g_0j ~ intercept@g_0;
+        g_1j ~ intercept@g_1;
+        g_2j ~ intercept@g_2;
+        l_j  ~ intercept@l_0;
+        w_j  ~ intercept@w_0;
+
+    within:
+        # Location equations
+        sleep ~ intercept@b_0j sleep_lag@b_1j
+            pain_lag@b_2j
+            (sleep_lag*pain_lag)@b_3;
+
+        pain ~ intercept@g_0j pain_lag@g_1j
+            sleep_lag@g_2j;
+
+        # Scale equations
+        var(sleep) ~ intercept@l_j;
+        var(pain)  ~ intercept@w_j;
+
+        pain ~~ sleep;
+
+# Residual variances on the original sleep and pain metrics. Because
+# the log residual variances are normally distributed, the variances
+# themselves are lognormal: exp(mu) is the population median and
+# exp(mu + tau^2/2) is the population mean.
+PARAMETERS:
+    sleep_var_median = exp(l_0);
+    sleep_var_mean   = exp(l_0 + l_j.totalvar/2);
+    pain_var_median  = exp(w_0);
+    pain_var_mean    = exp(w_0 + w_j.totalvar/2);
+
+# Specify the MCMC sampler
+SEED: 12371;               # Reproducible random seed
+BURN: 40000;               # Warm-up iterations per chain
+ITERATIONS: 80000;         # Retained iterations across chains
+CHAINS: 4;                 # Number of MCMC chains

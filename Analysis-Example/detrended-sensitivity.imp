@@ -1,0 +1,69 @@
+#! nightly
+#-------------------------------------------------------------------#
+# Dynamic Structural Equation Modeling in Blimp
+#
+# Supplemental Material
+#
+# Sensitivity Analysis - Person-Specific Linear Trends
+#
+# Person-specific quantities:
+#   b_0j = typical sleep quality       g_0j = typical pain
+#   b_1j = sleep carry-over            g_1j = pain carry-over
+#   b_2j = pain-to-sleep spillover     g_2j = sleep-to-pain spillover
+#   d_Sj = sleep linear trend          d_Pj = pain linear trend
+#
+# Copyright Brian T. Keller 2026 all rights reserved
+#-------------------------------------------------------------------#
+
+# Read in and set up data
+DATA: paindiary.csv;       # Read data in
+MISSING: NA;               # Missing data code
+CLUSTERID: person;         # Level-2 (person) identifier
+TIMEID: day;               # Consecutive time index
+
+LATENT:                    # Person-specific random effects
+    person = b_0j b_1j b_2j
+             g_0j g_1j g_2j
+             d_Sj d_Pj;
+
+# Specify Detrended Moderated VAR(1) Model
+MODEL:
+    # Residual lags after removing each person's fitted trajectory
+    sleep_resid_lag = sleep.lag
+        - (b_0j + d_Sj*(day - 1));
+    pain_resid_lag = pain.lag
+        - (g_0j + d_Pj*(day - 1));
+
+    between:
+        b_0j b_1j b_2j g_0j g_1j g_2j
+        d_Sj d_Pj ~~
+            b_0j b_1j b_2j g_0j g_1j g_2j
+            d_Sj d_Pj;
+
+        b_0j ~ intercept@b_0;
+        b_1j ~ intercept@b_1;
+        b_2j ~ intercept@b_2;
+        g_0j ~ intercept@g_0;
+        g_1j ~ intercept@g_1;
+        g_2j ~ intercept@g_2;
+        d_Sj ~ intercept@d_S;
+        d_Pj ~ intercept@d_P;
+
+    within:
+        # Current outcomes include each person's trajectory at day t
+        sleep ~ intercept@b_0j day@d_Sj
+            sleep_resid_lag@b_1j
+            pain_resid_lag@b_2j
+            (sleep_resid_lag*pain_resid_lag)@b_3;
+
+        pain ~ intercept@g_0j day@d_Pj
+            pain_resid_lag@g_1j
+            sleep_resid_lag@g_2j;
+
+        pain ~~ sleep;
+
+# Specify the MCMC sampler
+SEED: 12371;               # Reproducible random seed
+BURN: 40000;               # Warm-up iterations per chain
+ITERATIONS: 80000;         # Retained iterations across chains
+CHAINS: 4;                 # Number of MCMC chains

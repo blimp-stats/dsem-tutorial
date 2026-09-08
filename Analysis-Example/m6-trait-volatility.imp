@@ -1,0 +1,114 @@
+#! nightly
+#-------------------------------------------------------------------#
+# Dynamic Structural Equation Modeling in Blimp
+#
+# Supplemental Material
+#
+# Model 6 - Trait Volatility as a Predictor and Moderator
+#
+# Person-specific quantities:
+#   b_0j = typical sleep quality       g_0j = typical pain
+#   b_1j = sleep carry-over            g_1j = pain carry-over
+#   b_2j = pain-to-sleep spillover     g_2j = sleep-to-pain spillover
+#   l_j  = sleep log residual variance
+#   w_j  = pain log residual variance
+#
+# Copyright Brian T. Keller 2026 all rights reserved
+#-------------------------------------------------------------------#
+
+# Read in and set up data
+DATA: paindiary.csv;       # Read data in
+MISSING: NA;               # Missing data code
+CLUSTERID: person;         # Level-2 (person) identifier
+TIMEID: day;               # Consecutive time index
+
+LATENT:                    # Person-specific random effects
+    person = b_0j b_1j b_2j
+             g_0j g_1j g_2j
+             l_j w_j;
+
+# Specify Trait-Volatility Prediction and Moderation Model
+MODEL:
+    # Latent-centered within-person lagged deviations
+    sleep_lag = sleep.lag - b_0j;
+    pain_lag  = pain.lag  - g_0j;
+
+    # Center the observed level-2 predictor and the latent
+    # person-specific log residual variances
+    stress_c = stress - stress_mean;
+    l_c      = l_j - l_0;
+    w_c      = w_j - w_0;
+
+    between:
+        # Residual covariance among trait levels and lagged slopes
+        b_0j b_1j b_2j g_0j g_1j g_2j ~~
+            b_0j b_1j b_2j g_0j g_1j g_2j;
+
+        # Residual covariance between the latent volatility predictors
+        l_j w_j ~~ l_j w_j;
+
+        # Typical sleep: stress and sleep-volatility main effects
+        b_0j ~ intercept@b_0 stress_c@b_4
+            l_c@b_7;
+
+        # Typical pain: lower-order terms and focal level-2 interaction
+        g_0j ~ intercept@g_0 stress_c@g_4
+            w_c@g_7
+            (stress_c*w_c)@g_8;
+
+        # Stress prediction of the four random lagged slopes
+        b_1j ~ intercept@b_1 stress_c@b_5;
+        b_2j ~ intercept@b_2 stress_c@b_6;
+        g_1j ~ intercept@g_1 stress_c@g_5;
+        g_2j ~ intercept@g_2 stress_c@g_6;
+
+        # Stress prediction of person-specific residual volatility
+        l_j ~ intercept@l_0 stress_c@l_1;
+        w_j ~ intercept@w_0 stress_c@w_1;
+
+        # Mean used to grand-mean center observed stress
+        stress ~ intercept@stress_mean;
+
+    within:
+        # Location equations
+        sleep ~ intercept@b_0j sleep_lag@b_1j
+            pain_lag@b_2j
+            (sleep_lag*pain_lag)@b_3;
+
+        pain ~ intercept@g_0j pain_lag@g_1j
+            sleep_lag@g_2j;
+
+        # Scale equations
+        var(sleep) ~ intercept@l_j;
+        var(pain)  ~ intercept@w_j;
+
+        pain ~~ sleep;
+
+PARAMETERS:
+    # Volatility coefficients rescaled to a 50% increase in residual
+    # variance. A one-unit change on the log-variance scale is a
+    # factor of e = 2.72; log(1.5) = 0.405465 rescales the estimates
+    # to a 1.5-fold, or 50%, increase in residual variance.
+    b_7_50 = b_7*log(1.5);
+    g_7_50 = g_7*log(1.5);
+    g_8_50 = g_8*log(1.5);
+
+    # Model-implied between-person SD of pain volatility, used to
+    # probe the stress by pain-volatility interaction
+    w_sd   = sqrt(w_j.totalvar);
+    w_low  = -w_sd;
+    w_high = w_sd;
+
+# Conditional Effects Analysis
+# Stress--typical-pain association at low, average, and high pain
+# volatility
+SIMPLE:
+    stress_c | w_c @ w_low;
+    stress_c | w_c @ 0;
+    stress_c | w_c @ w_high;
+
+# Specify the MCMC sampler
+SEED: 12371;               # Reproducible random seed
+BURN: 40000;               # Warm-up iterations per chain
+ITERATIONS: 80000;         # Retained iterations across chains
+CHAINS: 4;                 # Number of MCMC chains

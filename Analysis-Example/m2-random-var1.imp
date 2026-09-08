@@ -1,0 +1,97 @@
+#! nightly
+#-------------------------------------------------------------------#
+# Dynamic Structural Equation Modeling in Blimp
+#
+# Supplemental Material
+#
+# Model 2 - Random-Slope Bivariate VAR(1)
+#
+# Person-specific quantities:
+#   b_0j = typical sleep quality       g_0j = typical pain
+#   b_1j = sleep carry-over            g_1j = pain carry-over
+#   b_2j = pain-to-sleep spillover     g_2j = sleep-to-pain spillover
+#
+# Copyright Brian T. Keller 2026 all rights reserved
+#-------------------------------------------------------------------#
+
+# Read in and set up data
+DATA: paindiary.csv;       # Read data in
+MISSING: NA;               # Missing data code
+CLUSTERID: person;         # Level-2 (person) identifier
+TIMEID: day;               # Consecutive time index
+
+LATENT:                    # Person-specific random effects
+    person = b_0j b_1j b_2j
+             g_0j g_1j g_2j;
+
+# Specify Random-Slope Bivariate VAR(1) Model
+MODEL:
+    # Latent-centered within-person lagged deviations
+    sleep_lag = sleep.lag - b_0j;
+    pain_lag  = pain.lag  - g_0j;
+
+    between:
+        b_0j b_1j b_2j g_0j g_1j g_2j ~~
+            b_0j b_1j b_2j g_0j g_1j g_2j;
+
+        b_0j ~ intercept@b_0;
+        b_1j ~ intercept@b_1;
+        b_2j ~ intercept@b_2;
+        g_0j ~ intercept@g_0;
+        g_1j ~ intercept@g_1;
+        g_2j ~ intercept@g_2;
+
+    within:
+        sleep ~ intercept@b_0j sleep_lag@b_1j
+            pain_lag@b_2j;
+
+        pain ~ intercept@g_0j pain_lag@g_1j
+            sleep_lag@g_2j;
+
+        pain ~~ sleep;
+
+# Model-implied between-person SDs of the four lagged coefficients
+PARAMETERS:
+    b_1_sd   = sqrt(b_1j.totalvar);
+    b_1_low  = b_1 - b_1_sd;
+    b_1_high = b_1 + b_1_sd;
+
+    b_2_sd   = sqrt(b_2j.totalvar);
+    b_2_low  = b_2 - b_2_sd;
+    b_2_high = b_2 + b_2_sd;
+
+    g_1_sd   = sqrt(g_1j.totalvar);
+    g_1_low  = g_1 - g_1_sd;
+    g_1_high = g_1 + g_1_sd;
+
+    g_2_sd   = sqrt(g_2j.totalvar);
+    g_2_low  = g_2 - g_2_sd;
+    g_2_high = g_2 + g_2_sd;
+
+# Conditional Effects Analysis
+# Probe each lagged coefficient distribution at its average and at
+# +/- 1 model-implied between-person SD
+SIMPLE:
+    # Sleep equation: carry-over and pain-to-sleep spillover
+    sleep_lag | b_1j @ b_1_low and b_0j @ 0;
+    sleep_lag | b_1j @ b_1 and b_0j @ 0;
+    sleep_lag | b_1j @ b_1_high and b_0j @ 0;
+
+    pain_lag | b_2j @ b_2_low and b_0j @ 0;
+    pain_lag | b_2j @ b_2 and b_0j @ 0;
+    pain_lag | b_2j @ b_2_high and b_0j @ 0;
+
+    # Pain equation: carry-over and sleep-to-pain spillover
+    pain_lag | g_1j @ g_1_low and g_0j @ 0;
+    pain_lag | g_1j @ g_1 and g_0j @ 0;
+    pain_lag | g_1j @ g_1_high and g_0j @ 0;
+
+    sleep_lag | g_2j @ g_2_low and g_0j @ 0;
+    sleep_lag | g_2j @ g_2 and g_0j @ 0;
+    sleep_lag | g_2j @ g_2_high and g_0j @ 0;
+
+# Specify the MCMC sampler
+SEED: 12371;               # Reproducible random seed
+BURN: 40000;               # Warm-up iterations per chain
+ITERATIONS: 80000;         # Retained iterations across chains
+CHAINS: 4;                 # Number of MCMC chains

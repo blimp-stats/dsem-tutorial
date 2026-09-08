@@ -1,0 +1,660 @@
+
+---------------------------------------------------------------------------
+
+                                   Blimp
+                                 4.1.0.b15
+
+             Blimp was developed with funding from Institute of
+           Education Sciences awards R305D150056 and R305D190002.
+
+            Craig K. Enders, P.I. Email: cenders@psych.ucla.edu
+           Brian T. Keller, Co-P.I. Email: btkeller@missouri.edu
+                 Han Du, Co-P.I. Email: hdu@psych.ucla.edu
+                 Roy Levy, Co-P.I. Email: roy.levy@asu.edu
+
+              Programming and Blimp Studio by Brian T. Keller
+
+                   There is no expressed license given.
+
+---------------------------------------------------------------------------
+
+
+ALGORITHMIC OPTIONS SPECIFIED:
+
+  Imputation method:                 Fully Bayesian model-based
+  MCMC algorithm:                    Full conditional Metropolis sampler with
+                                       Auto-Derived Conditional Distributions
+  Default Priors:
+    Multilevel covariance matrices:  Zero matrix, df = -(p + 1) (PRIOR2)
+    Outcome covariance matrices:     Zero matrix, df = -(p + 1) (PRIOR2)
+    Predictor model variances:       Unit sum of squares, df = 2 (XPRIOR1)
+  Chain Starting Values:             Random starting values
+
+
+  NOTE: For complete list of priors include 'pinfo' in the options.
+
+  NOTE: The following variables have been renamed
+        to be 9 characters or less.
+
+           Employment -> Employmen
+           NumDiagnose -> NumDiagno
+           ActivityLevel -> ActivityL
+           PainAccept -> PainAccep
+           Catastrophize -> Catastrop
+
+
+BURN-IN POTENTIAL SCALE REDUCTION (PSR) OUTPUT:
+
+  NOTE: Rank-normalized Rhat (Vehtari et al., 2021) is being used.
+        This applies rank normalization and chain folding for robust
+        convergence detection across all chains.
+
+  Comparing iterations across 4 chains     Highest Rhat   Parameter #  
+                         1001 to 2000            1.223           108  
+                         2001 to 4000            1.064            91  
+                         3001 to 6000            1.060            88  
+                         4001 to 8000            1.052            88  
+                         5001 to 10000           1.040            94  
+                         6001 to 12000           1.037            94  
+                         7001 to 14000           1.021            94  
+                         8001 to 16000           1.030            94  
+                         9001 to 18000           1.044            94  
+                        10001 to 20000           1.026            94  
+                        11001 to 22000           1.025            94  
+                        12001 to 24000           1.025            94  
+                        13001 to 26000           1.023            94  
+                        14001 to 28000           1.016            46  
+                        15001 to 30000           1.014            94  
+                        16001 to 32000           1.010            18  
+                        17001 to 34000           1.010            91  
+                        18001 to 36000           1.008            17  
+                        19001 to 38000           1.009            42  
+                        20001 to 40000           1.007           122  
+
+
+METROPOLIS-HASTINGS ACCEPTANCE RATES:
+
+  Chain 1:
+
+    Variable                            Type    Probability   Target Value 
+    l_j                           latent imp          0.508          0.500 
+    w_j                           latent imp          0.504          0.500 
+    CovMat(pain sleep)             parameter          0.531          0.500 
+
+  NOTE: Suppressing printing of 3 chains.
+        Use keyword 'tuneinfo' in options to override.
+
+
+DATA INFORMATION:
+
+  Time identifier:          day
+  Level-2 identifier:       person
+  Sample Size:              2713
+  Level-2 Clusters:         131
+  Missing Data Info:
+
+                      Pattern #:       1     2     3     4
+                          miss % --------------------------
+                     pain =  1.3       -     -     M     M  
+                    sleep =  1.3       -     -     M     M  
+                   stress =  0.0       -     -     -     -  
+                pain.lag1 =  6.1       -     M     -     M  
+               sleep.lag1 =  6.1       -     M     -     M  
+                                 --------------------------
+                                 %  93.2   5.5   0.7   0.6
+
+
+MODEL INFORMATION:
+
+  NUMBER OF PARAMETERS
+    Outcome Models:         47
+    Generated Parameters:   6
+    Predictor Models:       0
+
+  FACTORS
+    Level-2:                b_0j b_1j b_2j g_0j g_1j g_2j l_j w_j
+
+  DEFINED VARIABLES
+    [1]  sleep_lag = sleep.lag - b_0j 
+    [2]  pain_lag = pain.lag - g_0j 
+    [3]  stress_c = stress - stress_mean 
+    [4]  l_c = l_j - l_0 
+    [5]  w_c = w_j - w_0 
+
+  MODELS
+
+   between:
+    [1]  b_0j ~ Intercept@b_0 stress_c@b_4 l_c@b_7
+    [2]  b_1j ~ Intercept@b_1 stress_c@b_5
+    [3]  b_2j ~ Intercept@b_2 stress_c@b_6
+    [4]  g_0j ~ Intercept@g_0 stress_c@g_4 w_c@g_7 (stress_c*w_c)@g_8
+    [5]  g_1j ~ Intercept@g_1 stress_c@g_5
+    [6]  g_2j ~ Intercept@g_2 stress_c@g_6
+    [7]  l_j ~ Intercept@l_0 stress_c@l_1
+    [8]  w_j ~ Intercept@w_0 stress_c@w_1
+    [9]  stress ~ Intercept@stress_mean
+   [10]  b_0j b_1j b_2j g_0j g_1j g_2j <-> b_0j b_1j b_2j g_0j g_1j g_2j 
+   [11]  l_j <-> w_j
+
+   within:
+   [12]  pain ~ g_0j@1 (pain_lag)*g_1j@1 (sleep_lag)*g_2j@1
+   [13]  var(pain) ~ w_j@1
+   [14]  sleep ~ b_0j@1 (sleep_lag)*b_1j@1 (pain_lag)*b_2j@1 (sleep_lag*pain_lag)@b_3
+   [15]  var(sleep) ~ l_j@1
+   [16]  pain <-> sleep
+
+  GENERATED PARAMETERS
+    [1]  b_7_50 = b_7*log(1.5)
+    [2]  g_7_50 = g_7*log(1.5)
+    [3]  g_8_50 = g_8*log(1.5)
+    [4]  w_sd = sqrt(w_j.totalvar)
+    [5]  w_low = -w_sd
+    [6]  w_high = w_sd
+
+
+WARNING MESSAGES:
+
+  No warning messages.
+
+
+MODEL FIT:
+
+
+  INFORMATION CRITERIA
+
+    Conditional Likelihood
+      DIC2                  40533.342
+      WAIC                  42754.761
+
+
+IMPUTED DATA SUMMARIES:
+
+  NOTE: Imputed data summaries are averaged across 80000 data sets.
+
+
+Variables                              Mean     StdDev        25%        50%        75%        Min        Max 
+                                ------------------------------------------------------------------------------
+
+  b_0j                                5.407      1.364      4.472      5.383      6.362      2.163      9.015 
+  b_1j                                0.134      0.145      0.036      0.134      0.231     -0.243      0.509 
+  b_2j                                0.018      0.121     -0.062      0.019      0.100     -0.302      0.331 
+  g_0j                                3.508      1.596      2.334      3.447      4.590     -0.059      7.468 
+  g_1j                                0.172      0.273     -0.017      0.157      0.345     -0.474      0.962 
+  g_2j                               -0.006      0.091     -0.067     -0.005      0.056     -0.243      0.233 
+  l_j                                 0.858      0.876      0.429      0.949      1.383     -4.946      2.776 
+  w_j                                 0.559      0.616      0.153      0.557      0.952     -1.364      2.354 
+  stress                              1.719      1.021      0.998      1.746      2.245      0.000      4.990 
+  pain                                3.562      2.228      2.000      3.000      5.000     -2.521     11.657 
+  sleep                               5.435      2.216      4.000      6.000      7.000     -2.107     10.280 
+
+                                ------------------------------------------------------------------------------
+
+
+
+CORRELATIONS AMONG RESIDUALS:
+
+  Summaries based on 80000 iterations using 4 chains.
+  NOTE: Estimate column based on posterior median.
+
+   No residual correlations at Level-1.
+
+   Level-2:
+
+Correlations                       Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+
+  b_0j, l_j                          -0.010      0.127     -0.258      0.239      0.006      0.940  36538.638 
+  b_0j, w_j                           0.018      0.112     -0.202      0.236      0.024      0.876  40495.962 
+  b_0j, stress                        0.001      0.130     -0.253      0.253      0.000      0.996  33023.370 
+  b_1j, l_j                          -0.019      0.121     -0.253      0.217      0.024      0.878  31467.885 
+  b_1j, w_j                           0.017      0.122     -0.221      0.255      0.019      0.890  44174.625 
+  b_1j, stress                        0.001      0.131     -0.257      0.254      0.000      1.000  16532.792 
+  b_2j, l_j                           0.010      0.116     -0.217      0.237      0.007      0.935  22036.882 
+  b_2j, w_j                           0.032      0.122     -0.208      0.270      0.067      0.795  51670.538 
+  b_2j, stress                       -0.001      0.130     -0.255      0.254      0.000      0.998  19862.872 
+  g_0j, l_j                           0.069      0.109     -0.149      0.279      0.383      0.536  21324.744 
+  g_0j, w_j                          -0.017      0.128     -0.264      0.235      0.016      0.898  28474.471 
+  g_0j, stress                        0.000      0.130     -0.253      0.256      0.000      0.999  22675.087 
+  g_1j, l_j                           0.033      0.113     -0.191      0.252      0.084      0.772  49363.822 
+  g_1j, w_j                           0.008      0.117     -0.221      0.234      0.003      0.953  51309.675 
+  g_1j, stress                        0.001      0.131     -0.255      0.255      0.000      0.996  23417.952 
+  g_2j, l_j                           0.017      0.125     -0.228      0.260      0.017      0.896  30069.007 
+  g_2j, w_j                           0.023      0.123     -0.219      0.264      0.035      0.852  42385.488 
+  g_2j, stress                        0.001      0.130     -0.255      0.253      0.000      1.000  19944.735 
+  l_j, stress                         0.001      0.128     -0.249      0.249      0.000      0.996  70251.504 
+  w_j, stress                        -0.000      0.128     -0.252      0.250      0.000      1.000  70572.564 
+
+                                ------------------------------------------------------------------------------
+
+
+
+OUTCOME MODEL ESTIMATES:
+
+  Summaries based on 80000 iterations using 4 chains.
+  NOTE: Estimate column based on posterior median.
+
+  between block:
+
+Latent Variable:   b_0j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       1.507      0.240      1.120      2.057        ---        ---  29214.309 
+
+Coefficients:                   
+  Intercept                           5.408      0.133      5.143      5.669   1643.351      0.000  14080.152 
+  stress_c                           -0.327      0.122     -0.565     -0.087      7.193      0.007  16118.158 
+  l_c                                -0.613      0.154     -0.935     -0.327     16.126      0.000   6699.272 
+
+Standard Deviations:            
+  Residual SD                         1.227      0.096      1.058      1.434        ---        ---  28830.754 
+
+Standardized Coefficients:      
+  stress_c                           -0.235      0.083     -0.389     -0.063      7.761      0.005  16713.637 
+  l_c                                -0.378      0.081     -0.524     -0.208     21.512      0.000  10562.139 
+
+Proportion Variance Explained   
+  by Coefficients                     0.256      0.069      0.124      0.395        ---        ---  12562.817 
+  by Residual Variation               0.744      0.069      0.605      0.876        ---        ---  12562.817 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   b_1j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.022      0.010      0.008      0.045        ---        ---   1580.147 
+
+Coefficients:                   
+  Intercept                           0.133      0.026      0.082      0.186     25.637      0.000   2157.518 
+  stress_c                           -0.013      0.025     -0.064      0.035      0.291      0.590   2267.428 
+
+Standard Deviations:            
+  Residual SD                         0.150      0.031      0.091      0.213        ---        ---   1425.480 
+
+Standardized Coefficients:      
+  stress_c                           -0.093      0.169     -0.423      0.239      0.296      0.586   2123.424 
+
+Proportion Variance Explained   
+  by Coefficients                     0.018      0.051      0.000      0.182        ---        ---   2412.850 
+  by Residual Variation               0.982      0.051      0.818      1.000        ---        ---   2412.850 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   b_2j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.015      0.009      0.004      0.038        ---        ---   1087.851 
+
+Coefficients:                   
+  Intercept                           0.018      0.025     -0.032      0.068      0.509      0.476   2172.421 
+  stress_c                           -0.008      0.026     -0.058      0.045      0.092      0.762   1460.011 
+
+Standard Deviations:            
+  Residual SD                         0.123      0.033      0.067      0.195        ---        ---    972.691 
+
+Standardized Coefficients:      
+  stress_c                           -0.066      0.210     -0.452      0.382      0.080      0.778   1241.880 
+
+Proportion Variance Explained   
+  by Coefficients                     0.022      0.065      0.000      0.239        ---        ---   1588.021 
+  by Residual Variation               0.978      0.065      0.761      1.000        ---        ---   1588.021 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   g_0j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       2.297      0.389      1.692      3.218        ---        ---   4437.611 
+
+Coefficients:                   
+  Intercept                           3.589      0.163      3.268      3.905    487.373      0.000   8473.546 
+  stress_c                            0.551      0.163      0.228      0.869     11.373      0.001   5884.692 
+  w_c                                 0.413      0.282     -0.144      0.971      2.147      0.143   6935.686 
+  (stress_c*w_c)                     -0.447      0.258     -0.949      0.063      2.980      0.084   5371.323 
+
+Standard Deviations:            
+  Residual SD                         1.516      0.125      1.301      1.794        ---        ---   4548.485 
+
+Standardized Coefficients:      
+  stress_c                            0.336      0.095      0.137      0.508     12.270      0.000   4826.648 
+  w_c                                 0.151      0.100     -0.052      0.340      2.241      0.134   7174.141 
+  (stress_c*w_c)                     -0.178      0.099     -0.361      0.024      3.132      0.077   5195.977 
+
+Proportion Variance Explained   
+  by Coefficients                     0.187      0.067      0.067      0.328        ---        ---   3858.917 
+  by Residual Variation               0.813      0.067      0.672      0.933        ---        ---   3858.917 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Conditional Effects                Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+  stress_c | w_c @ w_low                                                                                      
+    Intercept                         3.328      0.248      2.840      3.817    179.996      0.000   8292.373 
+    Slope                             0.835      0.265      0.304      1.347      9.860      0.002   4800.516 
+                                                                                                              
+  stress_c | w_c @ 0                                                                                          
+    Intercept                         3.589      0.163      3.268      3.905    487.373      0.000   8473.546 
+    Slope                             0.551      0.163      0.228      0.869     11.373      0.001   5884.692 
+                                                                                                              
+  stress_c | w_c @ w_high                                                                                     
+    Intercept                         3.848      0.233      3.394      4.307    273.298      0.000   7155.777 
+    Slope                             0.271      0.191     -0.114      0.639      1.991      0.158  10178.465 
+                                                                                                              
+                                ------------------------------------------------------------------------------
+
+                                NOTE: Intercepts are computed by setting all predictors
+                                      not involved in the conditional effect to zero.
+
+
+
+Latent Variable:   g_1j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.080      0.018      0.051      0.120        ---        ---   6659.100 
+
+Coefficients:                   
+  Intercept                           0.172      0.034      0.105      0.240     25.137      0.000   6289.984 
+  stress_c                           -0.049      0.033     -0.114      0.015      2.225      0.136   6556.064 
+
+Standard Deviations:            
+  Residual SD                         0.283      0.031      0.227      0.347        ---        ---   6335.641 
+
+Standardized Coefficients:      
+  stress_c                           -0.175      0.113     -0.382      0.055      2.334      0.127   6849.636 
+
+Proportion Variance Explained   
+  by Coefficients                     0.031      0.041      0.000      0.147        ---        ---   8010.269 
+  by Residual Variation               0.969      0.041      0.853      1.000        ---        ---   8010.269 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   g_2j       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.009      0.005      0.002      0.021        ---        ---   1040.487 
+
+Coefficients:                   
+  Intercept                          -0.006      0.020     -0.043      0.033      0.079      0.779   1929.746 
+  stress_c                            0.014      0.018     -0.023      0.050      0.571      0.450   2064.333 
+
+Standard Deviations:            
+  Residual SD                         0.092      0.025      0.049      0.145        ---        ---    879.069 
+
+Standardized Coefficients:      
+  stress_c                            0.154      0.201     -0.256      0.538      0.562      0.454   1559.478 
+
+Proportion Variance Explained   
+  by Coefficients                     0.033      0.080      0.000      0.292        ---        ---   1490.440 
+  by Residual Variation               0.967      0.080      0.708      1.000        ---        ---   1490.440 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   l_j        
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.738      0.137      0.498      1.033        ---        ---   4868.744 
+
+Coefficients:                   
+  Intercept                           0.857      0.085      0.690      1.023    101.694      0.000  18510.452 
+  stress_c                            0.250      0.080      0.095      0.408      9.747      0.002  26666.819 
+
+Standard Deviations:            
+  Residual SD                         0.859      0.080      0.706      1.016        ---        ---   4666.461 
+
+Standardized Coefficients:      
+  stress_c                            0.287      0.084      0.110      0.440     11.299      0.001  33525.637 
+
+Proportion Variance Explained   
+  by Coefficients                     0.082      0.047      0.012      0.193        ---        ---  33773.261 
+  by Residual Variation               0.918      0.047      0.807      0.988        ---        ---  33773.261 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Latent Variable:   w_j        
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       0.360      0.065      0.254      0.510        ---        ---   8980.272 
+
+Coefficients:                   
+  Intercept                           0.559      0.064      0.434      0.683     77.305      0.000  14995.010 
+  stress_c                            0.182      0.059      0.065      0.298      9.341      0.002  20949.348 
+
+Standard Deviations:            
+  Residual SD                         0.600      0.054      0.504      0.714        ---        ---   8864.465 
+
+Standardized Coefficients:      
+  stress_c                            0.296      0.090      0.108      0.458     10.633      0.001  20681.646 
+
+Proportion Variance Explained   
+  by Coefficients                     0.088      0.052      0.012      0.210        ---        ---  20974.552 
+  by Residual Variation               0.912      0.052      0.790      0.988        ---        ---  20974.552 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Outcome Variable:  stress     
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Residual Var.                       1.049      0.133      0.831      1.352        ---        ---  79298.805 
+
+Coefficients:                   
+  Intercept                           1.718      0.090      1.542      1.895    364.179      0.000  12469.127 
+
+Standard Deviations:            
+  Residual SD                         1.024      0.064      0.912      1.163        ---        ---  79285.793 
+
+Proportion Variance Explained   
+  by Coefficients                     0.000      0.000      0.000      0.000        ---        ---        --- 
+  by Residual Variation               1.000      0.000      1.000      1.000        ---        ---        --- 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Covariance Matrix: b_0j b_1j b_2j g_0j g_1j g_2j
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Covariances:                    
+  Cov(b_0j,b_1j)                     -0.004      0.038     -0.079      0.071      0.013      0.911   3323.817 
+  Cov(b_0j,b_2j)                      0.041      0.036     -0.029      0.115      1.317      0.251   2404.564 
+  Cov(b_0j,g_0j)                     -0.344      0.215     -0.791      0.058      2.652      0.103  16617.602 
+  Cov(b_0j,g_1j)                     -0.051      0.050     -0.153      0.043      1.111      0.292  11544.613 
+  Cov(b_0j,g_2j)                      0.008      0.027     -0.045      0.063      0.098      0.754   2338.848 
+  Cov(b_1j,b_2j)                     -0.001      0.007     -0.014      0.012      0.011      0.917    974.911 
+  Cov(b_1j,g_0j)                     -0.089      0.045     -0.185     -0.006      3.999      0.046   3991.868 
+  Cov(b_1j,g_1j)                      0.011      0.011     -0.009      0.033      1.172      0.279   2329.251 
+  Cov(b_1j,g_2j)                      0.002      0.005     -0.008      0.011      0.115      0.734   1177.416 
+  Cov(b_2j,g_0j)                     -0.019      0.050     -0.119      0.078      0.155      0.694   1817.127 
+  Cov(b_2j,g_1j)                     -0.002      0.009     -0.022      0.015      0.090      0.765   1837.671 
+  Cov(b_2j,g_2j)                      0.001      0.004     -0.007      0.010      0.081      0.776   1190.621 
+  Cov(g_0j,g_1j)                      0.017      0.070     -0.121      0.154      0.056      0.813   6788.165 
+  Cov(g_0j,g_2j)                     -0.025      0.032     -0.090      0.035      0.692      0.405   3197.262 
+  Cov(g_1j,g_2j)                      0.004      0.007     -0.011      0.019      0.277      0.598   1576.325 
+
+Correlations:                   
+  Cor(b_0j,b_1j)                     -0.024      0.202     -0.416      0.373      0.013      0.908   2787.962 
+  Cor(b_0j,b_2j)                      0.283      0.231     -0.197      0.701      1.434      0.231   1675.825 
+  Cor(b_0j,g_0j)                     -0.188      0.107     -0.388      0.031      2.973      0.085  12832.823 
+  Cor(b_0j,g_1j)                     -0.150      0.136     -0.407      0.124      1.188      0.276  10423.793 
+  Cor(b_0j,g_2j)                      0.077      0.240     -0.397      0.550      0.101      0.750   1499.627 
+  Cor(b_1j,b_2j)                     -0.044      0.336     -0.680      0.600      0.016      0.899    716.319 
+  Cor(b_1j,g_0j)                     -0.405      0.181     -0.733     -0.025      4.827      0.028   1974.782 
+  Cor(b_1j,g_1j)                      0.277      0.236     -0.219      0.694      1.289      0.256   1956.637 
+  Cor(b_1j,g_2j)                      0.130      0.327     -0.519      0.714      0.136      0.712    939.230 
+  Cor(b_2j,g_0j)                     -0.106      0.263     -0.621      0.403      0.167      0.683   1325.456 
+  Cor(b_2j,g_1j)                     -0.074      0.255     -0.555      0.436      0.075      0.783   1434.167 
+  Cor(b_2j,g_2j)                      0.118      0.356     -0.610      0.724      0.080      0.777    880.592 
+  Cor(g_0j,g_1j)                      0.039      0.157     -0.269      0.341      0.060      0.806   6634.899 
+  Cor(g_0j,g_2j)                     -0.189      0.222     -0.627      0.246      0.733      0.392   2205.915 
+  Cor(g_1j,g_2j)                      0.155      0.276     -0.423      0.655      0.270      0.603   1206.371 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Covariance Matrix: l_j w_j    
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Covariances:                    
+  Cov(l_j,w_j)                        0.175      0.060      0.067      0.302      8.792      0.003  19766.631 
+
+Correlations:                   
+  Cor(l_j,w_j)                        0.345      0.101      0.135      0.528     11.516      0.001  12372.414 
+
+                                ------------------------------------------------------------------------------
+
+
+  within block:
+
+Outcome Variable:  pain       
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Q25% Residual Var.                  1.163      0.063      1.045      1.291        ---        ---   9967.964 
+  Q50% Residual Var.                  1.736      0.080      1.585      1.901        ---        ---  13804.222 
+  Mean Residual Var.                  2.103      0.075      1.966      2.259        ---        ---   8324.988 
+  Q75% Residual Var.                  2.567      0.133      2.325      2.845        ---        ---  12380.896 
+
+Coefficients:                   
+  g_0j                              @ 1.000        ---        ---        ---        ---        ---        --- 
+  (pain_lag)*g_1j                   @ 1.000        ---        ---        ---        ---        ---        --- 
+  (sleep_lag)*g_2j                  @ 1.000        ---        ---        ---        ---        ---        --- 
+
+Standardized Coefficients:      
+  (pain_lag)*g_1j                     0.478      0.072      0.314      0.593     42.209      0.000   1374.734 
+  (sleep_lag)*g_2j                    0.098      0.023      0.056      0.147     18.204      0.000    955.558 
+
+Proportion Variance Explained   
+  by Coefficients                     0.240      0.066      0.110      0.363        ---        ---   1486.400 
+  by Residual Variation               0.760      0.066      0.637      0.890        ---        ---   1486.400 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Outcome Variable:  var(pain)  
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+
+Coefficients:                   
+  w_j                               @ 1.000        ---        ---        ---        ---        ---        --- 
+
+Exponentiated Coefficients:     
+  w_j                                 2.718      0.000      2.718      2.718        ---        ---        --- 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Outcome Variable:  sleep      
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  Q25% Residual Var.                  1.528      0.092      1.355      1.717        ---        ---  14170.440 
+  Q50% Residual Var.                  2.559      0.128      2.321      2.822        ---        ---  15502.653 
+  Mean Residual Var.                  3.086      0.117      2.874      3.330        ---        ---   7403.832 
+  Q75% Residual Var.                  3.953      0.207      3.575      4.388        ---        ---  12013.004 
+
+Coefficients:                   
+  b_0j                              @ 1.000        ---        ---        ---        ---        ---        --- 
+  (sleep_lag)*b_1j                  @ 1.000        ---        ---        ---        ---        ---        --- 
+  (pain_lag)*b_2j                   @ 1.000        ---        ---        ---        ---        ---        --- 
+  (sleep_lag*pain_lag)               -0.039      0.013     -0.065     -0.013      8.333      0.004  16794.375 
+
+Standardized Coefficients:      
+  (sleep_lag)*b_1j                    0.199      0.027      0.147      0.253     54.061      0.000   1632.046 
+  (pain_lag)*b_2j                     0.113      0.029      0.064      0.176     16.044      0.000   1030.707 
+  (sleep_lag*pain_lag)               -0.072      0.025     -0.122     -0.024      8.341      0.004  15857.151 
+
+Proportion Variance Explained   
+  by Coefficients                     0.059      0.013      0.037      0.089        ---        ---   1759.273 
+  by Residual Variation               0.941      0.013      0.911      0.963        ---        ---   1759.273 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Outcome Variable:  var(sleep) 
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+
+Coefficients:                   
+  l_j                               @ 1.000        ---        ---        ---        ---        ---        --- 
+
+Exponentiated Coefficients:     
+  l_j                                 2.718      0.000      2.718      2.718        ---        ---        --- 
+
+                                ------------------------------------------------------------------------------
+
+
+
+Covariance Matrix: pain sleep 
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Average Covariances:            
+  Cov(pain,sleep)                    -0.927      0.150     -1.236     -0.644     38.645      0.000  10139.513 
+
+Correlations:                   
+  Cor(pain,sleep)                    -0.143      0.021     -0.183     -0.102     47.145      0.000  11248.113 
+
+                                ------------------------------------------------------------------------------
+
+
+
+GENERATED PARAMETERS:
+
+  Summaries based on 80000 iterations using 4 chains.
+  NOTE: Estimate column based on posterior median.
+
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+
+  b_7_50                             -0.248      0.062     -0.379     -0.133     16.126      0.000   6699.272 
+  g_7_50                              0.167      0.115     -0.058      0.394      2.147      0.143   6935.686 
+  g_8_50                             -0.181      0.105     -0.385      0.026      2.980      0.084   5371.323 
+  w_sd                                0.631      0.055      0.532      0.748    133.053      0.000   9012.164 
+  w_low                              -0.631      0.055     -0.748     -0.532    133.053      0.000   9012.164 
+  w_high                              0.631      0.055      0.532      0.748    133.053      0.000   9012.164 
+
+                                ------------------------------------------------------------------------------
+

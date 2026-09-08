@@ -1,0 +1,79 @@
+#! nightly
+#-------------------------------------------------------------------#
+# Dynamic Structural Equation Modeling in Blimp
+#
+# Supplemental Material
+#
+# Model 5 - Stress Prediction of Person-Specific Quantities
+#
+# Person-specific quantities:
+#   b_0j = typical sleep quality       g_0j = typical pain
+#   b_1j = sleep carry-over            g_1j = pain carry-over
+#   b_2j = pain-to-sleep spillover     g_2j = sleep-to-pain spillover
+#   l_j  = sleep log residual variance
+#   w_j  = pain log residual variance
+#
+# Copyright Brian T. Keller 2026 all rights reserved
+#-------------------------------------------------------------------#
+
+# Read in and set up data
+DATA: paindiary.csv;       # Read data in
+MISSING: NA;               # Missing data code
+CLUSTERID: person;         # Level-2 (person) identifier
+TIMEID: day;               # Consecutive time index
+
+LATENT:                    # Person-specific random effects
+    person = b_0j b_1j b_2j
+             g_0j g_1j g_2j
+             l_j w_j;
+
+# Specify Stress-Prediction Location-Scale VAR(1) Model
+MODEL:
+    # Latent-centered within-person lagged deviations
+    sleep_lag = sleep.lag - b_0j;
+    pain_lag  = pain.lag  - g_0j;
+
+    # Grand-mean-centered person-level stress
+    stress_c  = stress - stress_mean;
+
+    between:
+        b_0j b_1j b_2j g_0j g_1j g_2j l_j w_j ~~
+            b_0j b_1j b_2j g_0j g_1j g_2j l_j w_j;
+
+        b_0j   ~ intercept@b_0 stress_c@b_4;
+        b_1j   ~ intercept@b_1 stress_c@b_5;
+        b_2j   ~ intercept@b_2 stress_c@b_6;
+        g_0j   ~ intercept@g_0 stress_c@g_4;
+        g_1j   ~ intercept@g_1 stress_c@g_5;
+        g_2j   ~ intercept@g_2 stress_c@g_6;
+        l_j    ~ intercept@l_0 stress_c@l_1;
+        w_j    ~ intercept@w_0 stress_c@w_1;
+
+        # Mean used to grand-mean center observed stress
+        stress ~ intercept@stress_mean;
+
+    within:
+        # Location equations
+        sleep ~ intercept@b_0j sleep_lag@b_1j
+            pain_lag@b_2j
+            (sleep_lag*pain_lag)@b_3;
+
+        pain ~ intercept@g_0j pain_lag@g_1j
+            sleep_lag@g_2j;
+
+        # Scale equations
+        var(sleep) ~ intercept@l_j;
+        var(pain)  ~ intercept@w_j;
+
+        pain ~~ sleep;
+
+# Stress effects on volatility expressed as residual variance ratios
+PARAMETERS:
+    sleep_var_ratio = exp(l_1);
+    pain_var_ratio  = exp(w_1);
+
+# Specify the MCMC sampler
+SEED: 12371;               # Reproducible random seed
+BURN: 40000;               # Warm-up iterations per chain
+ITERATIONS: 80000;         # Retained iterations across chains
+CHAINS: 4;                 # Number of MCMC chains
